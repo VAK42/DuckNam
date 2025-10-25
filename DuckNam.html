@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Rate Training Zone Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        body.dark .theme-toggle {
+            background: #2d2d44;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .wrapper.center {
+            justify-content: center;
+        }
+
+        .wrapper.center .results {
+            display: none;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 450px;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.dark .container {
+            background: #2d2d44;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 24px;
+            text-transform: capitalize;
+        }
+
+        body.dark h1 {
+            color: #eee;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 12px;
+            text-transform: capitalize;
+        }
+
+        body.dark .subtitle {
+            color: #aaa;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        body.dark .input-section {
+            background: #1a1a2e;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group:last-of-type {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: capitalize;
+        }
+
+        body.dark label {
+            color: #eee;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+            text-transform: capitalize;
+        }
+
+        body.dark input[type="number"] {
+            background: #2d2d44;
+            border-color: #3d3d5c;
+            color: #eee;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        input[type="number"]::placeholder {
+            text-transform: capitalize;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e0e6ed;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        body.dark .checkbox-group {
+            background: #2d2d44;
+            border-color: #3d3d5c;
+        }
+
+        .checkbox-group:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        body.dark .checkbox-group:hover {
+            background: #3d3d5c;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+            text-transform: capitalize;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: capitalize;
+        }
+
+        .calculate-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            width: 100%;
+            max-width: 550px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .results::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .results::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        body.dark .results::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+
+        .results.show {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #3498db;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        body.dark .result-card {
+            background: #2d2d44;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-card:nth-child(2) {
+            animation-delay: 0.1s;
+            border-left-color: #2ecc71;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2c3e50;
+            text-transform: capitalize;
+        }
+
+        body.dark .result-title {
+            color: #eee;
+        }
+
+        .result-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        body.dark .result-details {
+            background: #1a1a2e;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        body.dark .result-row {
+            color: #bbb;
+        }
+
+        .result-row span:first-child {
+            text-transform: capitalize;
+        }
+
+        .result-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        body.dark .result-value {
+            color: #eee;
+        }
+
+        .formula {
+            background: #e8f4f8;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 12px;
+            font-style: italic;
+            color: #34495e;
+            border-left: 3px solid #3498db;
+        }
+
+        body.dark .formula {
+            background: #16213e;
+            color: #aaa;
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: capitalize;
+        }
+
+        .reset-btn:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+        }
+
+        @media (max-width: 968px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .wrapper {
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                padding: 80px 20px 20px;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .wrapper.center {
+                justify-content: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 20px 25px;
+            }
+
+            .results {
+                max-width: 100%;
+                max-height: none;
+                transform: translateY(30px);
+            }
+
+            .results.show {
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .theme-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .subtitle {
+                font-size: 11px;
+            }
+
+            .input-section {
+                padding: 15px;
+            }
+
+            .result-card {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .wrapper {
+                padding: 70px 15px 15px;
+            }
+
+            .wrapper.center {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .calculate-btn {
+                font-size: 14px;
+                padding: 11px;
+            }
+
+            .result-title {
+                font-size: 15px;
+            }
+
+            .result-value {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+
+    <div class="wrapper center" id="wrapper">
+        <div class="container">
+            <h1>🫀 Máy Tính Nhịp Tim Tập Luyện</h1>
+            <p class="subtitle">Heart Rate Training Zone Calculator</p>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="age">Tuổi (Age):</label>
+                    <input type="number" id="age" placeholder="Nhập Tuổi Của Bạn" min="1" max="120">
+                </div>
+
+                <div class="input-group">
+                    <label for="restingHR">Nhịp Tim Nghỉ (Resting HR):</label>
+                    <input type="number" id="restingHR" placeholder="Nhập Nhịp Tim Khi Nghỉ Ngơi" min="30" max="120">
+                </div>
+
+                <div class="input-group">
+                    <label for="percentage">Phần Trăm Cường Độ (%):</label>
+                    <input type="number" id="percentage" placeholder="Nhập Phần Trăm (Ví Dụ: 60, 70, 80)" min="0" max="100" value="60">
+                </div>
+
+                <div class="input-group">
+                    <div class="checkbox-group" onclick="document.getElementById('kidneyDisease').click()">
+                        <input type="checkbox" id="kidneyDisease">
+                        <label for="kidneyDisease">Bệnh Suy Tim (Heart Disease)</label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="calculate-btn" onclick="calculateHR()">Tính Toán</button>
+        </div>
+
+        <div class="results" id="results">
+            <div id="resultsContent"></div>
+            <button class="reset-btn" onclick="resetCalculator()">Tính Lại</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark');
+                document.getElementById('themeToggle').textContent = '☀️';
+            }
+        });
+
+        function calculateHR() {
+            const age = parseInt(document.getElementById('age').value);
+            const restingHR = parseInt(document.getElementById('restingHR').value);
+            const percentage = parseInt(document.getElementById('percentage').value);
+            const hasKidneyDisease = document.getElementById('kidneyDisease').checked;
+
+            if (!age || !restingHR || !percentage) {
+                alert('Vui Lòng Nhập Đầy Đủ Thông Tin!');
+                return;
+            }
+
+            let hrMax, formula, ageGroup;
+
+            if (hasKidneyDisease) {
+                hrMax = 119 + (0.5 * restingHR) - (0.5 * age);
+                formula = `HR Max = 119 + (0.5 × ${restingHR}) - (0.5 × ${age}) = ${hrMax.toFixed(1)}`;
+                ageGroup = 'Bệnh Suy Tim';
+            } else {
+                if (age < 30) {
+                    hrMax = 208 - (0.7 * age);
+                    formula = `HR Max = 208 - (0.7 × ${age}) = ${hrMax.toFixed(1)}`;
+                    ageGroup = 'Dưới 30 Tuổi';
+                } else if (age >= 30 && age <= 45) {
+                    hrMax = 220 - age;
+                    formula = `HR Max = 220 - ${age} = ${hrMax}`;
+                    ageGroup = '30-45 Tuổi';
+                } else {
+                    hrMax = 206 - (0.7 * age);
+                    formula = `HR Max = 206 - (0.7 × ${age}) = ${hrMax.toFixed(1)}`;
+                    ageGroup = 'Trên 45 Tuổi';
+                }
+            }
+
+            const hrr = hrMax - restingHR;
+            const targetHR = (hrr * percentage / 100) + restingHR;
+
+            displayResults(hrMax, restingHR, hrr, percentage, targetHR, formula, ageGroup);
+        }
+
+        function displayResults(hrMax, restingHR, hrr, percentage, targetHR, formula, ageGroup) {
+            const resultsHTML = `
+                <div class="result-card">
+                    <div class="result-title">
+                        <span class="icon">📊</span>
+                        <span>Kết Quả Tính Toán - ${ageGroup}</span>
+                    </div>
+                    <div class="result-details">
+                        <div class="result-row">
+                            <span>Nhịp Tim Tối Đa (HR Max):</span>
+                            <span class="result-value">${hrMax.toFixed(1)} Bpm</span>
+                        </div>
+                        <div class="result-row">
+                            <span>Nhịp Tim Nghỉ (Resting HR):</span>
+                            <span class="result-value">${restingHR} Bpm</span>
+                        </div>
+                        <div class="result-row">
+                            <span>Dự Trữ Nhịp Tim (HRR):</span>
+                            <span class="result-value">${hrr.toFixed(1)} Bpm</span>
+                        </div>
+                        <div class="formula">${formula}</div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-title">
+                        <span class="icon">🎯</span>
+                        <span>Nhịp Tim Mục Tiêu</span>
+                    </div>
+                    <div class="result-details">
+                        <div class="result-row">
+                            <span>Cường Độ:</span>
+                            <span class="result-value">${percentage}%</span>
+                        </div>
+                        <div class="result-row">
+                            <span>HR Mục Tiêu:</span>
+                            <span class="result-value">${targetHR.toFixed(1)} Bpm</span>
+                        </div>
+                        <div class="formula">
+                            HR Mục Tiêu = (${hrr.toFixed(1)} × ${percentage}%) + ${restingHR} = ${targetHR.toFixed(1)} Bpm
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsContent').innerHTML = resultsHTML;
+            
+            setTimeout(() => {
+                document.getElementById('wrapper').classList.remove('center');
+                document.getElementById('results').classList.add('show');
+            }, 100);
+        }
+
+        function resetCalculator() {
+            document.getElementById('wrapper').classList.add('center');
+            document.getElementById('results').classList.remove('show');
+            
+            setTimeout(() => {
+                document.getElementById('age').value = '';
+                document.getElementById('restingHR').value = '';
+                document.getElementById('percentage').value = '60';
+                document.getElementById('kidneyDisease').checked = false;
+                document.getElementById('resultsContent').innerHTML = '';
+            }, 600);
+        }
+    </script>
+</body>
+</html>
